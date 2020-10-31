@@ -1,5 +1,5 @@
 def findcubeandmultiply(x):
-    print((x^3)*3);
+    print((x*x*x)*3);
 
 findcubeandmultiply(4)
 
