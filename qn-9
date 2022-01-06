@@ -1,0 +1,19 @@
+import csv
+f = open('medal.csv', 'r')
+
+country = []
+medal = []
+
+for i in csv.reader(f):
+    country.append(i[0])
+    medal.append(i[1])
+    
+x_lbl = country[0]
+country = country[1:]
+
+y_lbl = medal[0]
+medal = list(map(int,medal[1:]))
+
+plt.pie(medal, labels=country)
+plt.title(x_lbl+" vs "+y_lbl)
+plt.show()
