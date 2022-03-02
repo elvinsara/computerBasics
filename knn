@@ -1,0 +1,18 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import tree
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+iris=pd.read_csv("dslab.csv")
+print(iris)
+X=iris[["gives_birth","aquatic_animal","aerial_animal","has_legs"]]
+y=iris[["class_label"]]
+print(y)
+
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.3,random_state=1);
+c_knn=KNeighborsClassifier(n_neighbors=3)
+c_knn.fit(X_train,y_train)
+y_pred = clf.predict(X_test)
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
