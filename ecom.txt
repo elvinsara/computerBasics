@@ -1,0 +1,116 @@
+public class Product
+{
+    // Properties
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public string Category { get; set; }
+
+    // Constructor
+    public Product(string name, decimal price, string category)
+    {
+        Name = name;
+        Price = price;
+        Category = category;
+    }
+
+    // Method to display product information
+    public void DisplayProduct()
+    {
+        Console.WriteLine($"Product: {Name}, Price: {Price}, Category: {Category}");
+    }
+}
+
+
+
+
+public class User
+{
+    // Properties
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public string Email { get; set; }
+
+    // Constructor
+    public User(string username, string password, string email)
+    {
+        Username = username;
+        Password = password;
+        Email = email;
+    }
+
+    // Method to display user information
+    public void DisplayUser()
+    {
+        Console.WriteLine($"Username: {Username}, Email: {Email}");
+    }
+}
+
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+
+public class Order
+{
+    // Properties
+    public List<Product> Products { get; set; }
+    public decimal Total { get; set; }
+
+    // Constructor
+    public Order()
+    {
+        Products = new List<Product>();
+        Total = 0;
+    }
+
+    // Method to add a product to the order
+    public void AddProduct(Product product)
+    {
+        Products.Add(product);
+        Total += product.Price;
+    }
+
+    // Method to display the order details
+    public void DisplayOrder()
+    {
+        Console.WriteLine("Order Details:");
+        foreach (var product in Products)
+        {
+            product.DisplayProduct();
+        }
+        Console.WriteLine($"Total: {Total}");
+    }
+}
+
+
+
+
+using System;
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        // Create some products
+        Product product1 = new Product("Laptop", 1500.00m, "Electronics");
+        Product product2 = new Product("Headphones", 200.00m, "Accessories");
+
+        // Create a user
+        User user = new User("john_doe", "password123", "john@example.com");
+
+        // Create an order and add products to it
+        Order order = new Order();
+        order.AddProduct(product1);
+        order.AddProduct(product2);
+
+        // Display user info
+        user.DisplayUser();
+
+        // Display order details
+        order.DisplayOrder();
+    }
+}
