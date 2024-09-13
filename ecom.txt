@@ -114,3 +114,52 @@ public class Program
         order.DisplayOrder();
     }
 }
+
+------------
+
+ public string Name { get; set; }
+    public string Email { get; set; }
+
+    public Person(string name, string email)
+    {
+        Name = name;
+        Email = email;
+    }
+
+    public void DisplayPersonInfo()
+    {
+        Console.WriteLine($"Name: {Name}, Email: {Email}");
+    }
+
+
+
+public class Customer : Person
+{
+    public string CustomerID { get; set; }
+
+    public Customer(string name, string email, string customerId) : base(name, email)
+    {
+        CustomerID = customerId;
+    }
+
+    public void PlaceOrder()
+    {
+        Console.WriteLine($"{Name} has placed an order.");
+    }
+}
+
+public class Admin : Person
+{
+    public string AdminID { get; set; }
+
+    public Admin(string name, string email, string adminId) : base(name, email)
+    {
+        AdminID = adminId;
+    }
+
+    public void ManageSystem()
+    {
+        Console.WriteLine($"{Name} is managing the system.");
+    }
+}
+
