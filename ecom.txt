@@ -163,3 +163,13 @@ public class Admin : Person
     }
 }
 
+Customer customer = new Customer("Alice", "alice@example.com", "C123");
+Admin admin = new Admin("Bob", "bob@example.com", "A456");
+
+customer.DisplayPersonInfo();
+customer.PlaceOrder();
+
+admin.DisplayPersonInfo();
+admin.ManageSystem();
+
+
