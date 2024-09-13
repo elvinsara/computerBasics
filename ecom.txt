@@ -171,5 +171,40 @@ customer.PlaceOrder();
 
 admin.DisplayPersonInfo();
 admin.ManageSystem();
+=============
+public class Order
+{
+    public decimal Total { get; set; }
+
+    public virtual decimal CalculateTotal()
+    {
+        return Total;
+    }
+}
+
+public class DiscountedOrder : Order
+{
+    public decimal Discount { get; set; }
+
+    public override decimal CalculateTotal()
+    {
+        return Total - Discount;
+    }
+}
+
+public class Order
+{
+    public List<Product> Products { get; set; } = new List<Product>();
+
+    public void AddProduct(Product product)
+    {
+        Products.Add(product);
+    }
+
+    public void AddProduct(string name, decimal price, string category)
+    {
+        Products.Add(new Product(name, price, category));
+    }
+}
 
 
