@@ -1,95 +1,43 @@
 using System;
+using System.Collections.Generic;
 
-abstract class Flight
+interface IBooking
 {
-    public string FlightNumber { get; set; }
-    public string Destination { get; set; }
-    public string Departure { get; set; }
-    public double BaseFare { get; set; }
+    void BookTicket(Flight flight, Passenger passenger);
+    void CancelBooking(int bookingId);
+    void GetBookingDetails(int bookingId);
+}
+-----------------
+class Passenger
+{
+    public int PassengerId { get; set; }
+    public string Name { get; set; }
 
-    // Abstract methods to be implemented by derived classes
-    public abstract double CalculateFare();
-    public abstract void DisplayDetails();
+    public Passenger(int passengerId, string name)
+    {
+        PassengerId = passengerId;
+        Name = name;
+    }
 }
 
-
-
------------------------
-
-
-class DomesticFlight : Flight
+class Booking
 {
-    public double TaxPercentage { get; set; } = 0.1;  // 10% tax for domestic flights
+    public int BookingId { get; set; }
+    public Flight Flight { get; set; }
+    public Passenger Passenger { get; set; }
 
-    public DomesticFlight(string flightNumber, string departure, string destination, double baseFare)
+    public Booking(int bookingId, Flight flight, Passenger passenger)
     {
-        FlightNumber = flightNumber;
-        Departure = departure;
-        Destination = destination;
-        BaseFare = baseFare;
+        BookingId = bookingId;
+        Flight = flight;
+        Passenger = passenger;
     }
 
-    // Calculate the fare with domestic tax
-    public override double CalculateFare()
+    public void DisplayBookingDetails()
     {
-        return BaseFare + (BaseFare * TaxPercentage);
-    }
-
-    // Display the flight details
-    public override void DisplayDetails()
-    {
-        Console.WriteLine($"Domestic Flight - {FlightNumber}");
-        Console.WriteLine($"From: {Departure}, To: {Destination}");
-        Console.WriteLine($"Base Fare: {BaseFare}, Total Fare: {CalculateFare()}");
+        Console.WriteLine($"Booking ID: {BookingId}");
+        Console.WriteLine($"Passenger: {Passenger.Name} (ID: {Passenger.PassengerId})");
+        Flight.DisplayDetails();
     }
 }
-=====================
-
-
-
-
-class InternationalFlight : Flight
-{
-    public double TaxPercentage { get; set; } = 0.2;  // 20% tax for international flights
-    public double InternationalFee { get; set; } = 50; // Flat international fee
-
-    public InternationalFlight(string flightNumber, string departure, string destination, double baseFare)
-    {
-        FlightNumber = flightNumber;
-        Departure = departure;
-        Destination = destination;
-        BaseFare = baseFare;
-    }
-
-    // Calculate the fare with international tax and fee
-    public override double CalculateFare()
-    {
-        return BaseFare + (BaseFare * TaxPercentage) + InternationalFee;
-    }
-
-    // Display the flight details
-    public override void DisplayDetails()
-    {
-        Console.WriteLine($"International Flight - {FlightNumber}");
-        Console.WriteLine($"From: {Departure}, To: {Destination}");
-        Console.WriteLine($"Base Fare: {BaseFare}, Total Fare: {CalculateFare()}");
-    }
-}
---------------------
-
-
-class Program
-{
-    static void Main(string[] args)
-    {
-        // Create a domestic flight
-        DomesticFlight domesticFlight = new DomesticFlight("DF123", "New York", "Chicago", 150);
-        domesticFlight.DisplayDetails();
-        
-        Console.WriteLine();
-
-        // Create an international flight
-        InternationalFlight internationalFlight = new InternationalFlight("IF456", "New York", "London", 500);
-        internationalFlight.DisplayDetails();
-    }
-}
+---------------------------------
