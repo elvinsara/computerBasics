@@ -41,3 +41,103 @@ class Booking
     }
 }
 ---------------------------------
+
+class OnlineBooking : IBooking
+{
+    private List<Booking> bookings = new List<Booking>();
+    private int nextBookingId = 1;
+
+    public void BookTicket(Flight flight, Passenger passenger)
+    {
+        Booking newBooking = new Booking(nextBookingId++, flight, passenger);
+        bookings.Add(newBooking);
+        Console.WriteLine($"Online booking completed. Booking ID: {newBooking.BookingId}");
+    }
+
+    public void CancelBooking(int bookingId)
+    {
+        Booking booking = bookings.Find(b => b.BookingId == bookingId);
+        if (booking != null)
+        {
+            bookings.Remove(booking);
+            Console.WriteLine($"Booking {bookingId} canceled successfully.");
+        }
+        else
+        {
+            Console.WriteLine($"Booking {bookingId} not found.");
+        }
+    }
+
+    public void GetBookingDetails(int bookingId)
+    {
+        Booking booking = bookings.Find(b => b.BookingId == bookingId);
+        if (booking != null)
+        {
+            booking.DisplayBookingDetails();
+        }
+        else
+        {
+            Console.WriteLine($"Booking {bookingId} not found.");
+        }
+    }
+}
+------------------------
+
+class AgencyBooking : IBooking
+{
+    private Dictionary<int, Booking> bookings = new Dictionary<int, Booking>();
+    private int nextBookingId = 1;
+
+    public void BookTicket(Flight flight, Passenger passenger)
+    {
+        Booking newBooking = new Booking(nextBookingId++, flight, passenger);
+        bookings.Add(newBooking.BookingId, newBooking);
+        Console.WriteLine($"Agency booking completed. Booking ID: {newBooking.BookingId}");
+    }
+
+    public void CancelBooking(int bookingId)
+    {
+        if (bookings.ContainsKey(bookingId))
+        {
+            bookings.Remove(bookingId);
+            Console.WriteLine($"Agency booking {bookingId} canceled.");
+        }
+        else
+        {
+            Console.WriteLine($"Booking {bookingId} not found.");
+        }
+    }
+
+    public void GetBookingDetails(int bookingId)
+    {
+        if (bookings.ContainsKey(bookingId))
+        {
+            bookings[bookingId].DisplayBookingDetails();
+        }
+        else
+        {
+            Console.WriteLine($"Booking {bookingId} not found.");
+        }
+    }
+}
+================
+
+Passenger passenger1 = new Passenger(1, "John Doe");
+        Passenger passenger2 = new Passenger(2, "Jane Smith");
+
+        // Online booking example
+        IBooking onlineBooking = new OnlineBooking();
+        onlineBooking.BookTicket(domesticFlight, passenger1);
+        onlineBooking.GetBookingDetails(1);
+        onlineBooking.CancelBooking(1);
+
+        Console.WriteLine();
+
+        // Agency booking example
+        IBooking agencyBooking = new AgencyBooking();
+        agencyBooking.BookTicket(internationalFlight, passenger2);
+        agencyBooking.GetBookingDetails(1);
+        agencyBooking.CancelBooking(1);
+
+
+
