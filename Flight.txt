@@ -1,83 +1,109 @@
+DF123,New York,Chicago,150,Domestic
+IF789,New York,London,500,International
+DF456,Los Angeles,San Francisco,120,Domestic
+IF101,San Francisco,Tokyo,700,International
+DF111,Miami,Orlando,90,Domestic
+
+...
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 
 class Program
 {
     static void Main(string[] args)
     {
-        // Create a list of flights
-        List<Flight> flights = new List<Flight>
-        {
-            new DomesticFlight("DF123", "New York", "Chicago", 150),
-            new DomesticFlight("DF456", "Los Angeles", "San Francisco", 120),
-            new InternationalFlight("IF789", "New York", "London", 500),
-            new InternationalFlight("IF101", "San Francisco", "Tokyo", 700),
-            new DomesticFlight("DF111", "Miami", "Orlando", 90)
-        };
+        List<Flight> flights = new List<Flight>();
 
-        // 1. Filter flights by destination
-        var flightsToLondon = from flight in flights
-                              where flight.Destination == "London"
-                              select flight;
+        // Read flight data from CSV file
+        string filePath = "flights.csv";
+        ReadFlightsFromCSV(filePath, flights);
 
-        Console.WriteLine("Flights to London:");
-        foreach (var flight in flightsToLondon)
+        // Display the flights read from the file
+        Console.WriteLine("Flights loaded from file:");
+        foreach (Flight flight in flights)
         {
             flight.DisplayDetails();
         }
 
-        Console.WriteLine();
+        // Modify flight data here if necessary...
 
-        // 2. Sort flights by fare
-        var flightsSortedByFare = from flight in flights
-                                  orderby flight.CalculateFare() ascending
-                                  select flight;
+        // Write updated flight data back to CSV file
+        WriteFlightsToCSV(filePath, flights);
+    }
 
-        Console.WriteLine("Flights sorted by fare:");
-        foreach (var flight in flightsSortedByFare)
+    // Method to read flight data from a CSV file
+    public static void ReadFlightsFromCSV(string filePath, List<Flight> flights)
+    {
+        try
         {
-            flight.DisplayDetails();
-        }
-
-        Console.WriteLine();
-
-        // 3. Group flights by category (Domestic vs. International)
-        var groupedFlights = from flight in flights
-                             group flight by flight.GetType().Name into flightGroup
-                             select flightGroup;
-
-        Console.WriteLine("Flights grouped by category:");
-        foreach (var group in groupedFlights)
-        {
-            Console.WriteLine($"Category: {group.Key}");
-            foreach (var flight in group)
+            if (!File.Exists(filePath))
             {
-                flight.DisplayDetails();
+                Console.WriteLine("File not found.");
+                return;
+            }
+
+            using (StreamReader reader = new StreamReader(filePath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string[] parts = line.Split(',');
+
+                    if (parts.Length != 5) continue;
+
+                    string flightNumber = parts[0];
+                    string origin = parts[1];
+                    string destination = parts[2];
+                    double baseFare = double.Parse(parts[3]);
+                    string type = parts[4];
+
+                    Flight flight = null;
+                    if (type == "Domestic")
+                    {
+                        flight = new DomesticFlight(flightNumber, origin, destination, baseFare);
+                    }
+                    else if (type == "International")
+                    {
+                        flight = new InternationalFlight(flightNumber, origin, destination, baseFare);
+                    }
+
+                    if (flight != null)
+                    {
+                        flights.Add(flight);
+                    }
+                }
             }
         }
-
-        Console.WriteLine();
-        
-        // BONUS: Using LINQ to find the most expensive flight
-        var mostExpensiveFlight = flights.OrderByDescending(f => f.CalculateFare()).First();
-        Console.WriteLine("Most expensive flight:");
-        mostExpensiveFlight.DisplayDetails();
+        catch (FileNotFoundException)
+        {
+            Console.WriteLine("The file was not found.");
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"An error occurred while reading the file: {ex.Message}");
+        }
     }
-}
--------------------------------------
 
-var mostExpensiveFlight = flights.OrderByDescending(f => f.CalculateFare()).First();
--------------
-//filter with traditional loop
-List<Flight> flightsToLondon = new List<Flight>();
-foreach (Flight flight in flights)
-{
-    if (flight.Destination == "London")
+    // Method to write flight data to a CSV file
+    public static void WriteFlightsToCSV(string filePath, List<Flight> flights)
     {
-        flightsToLondon.Add(flight);
+        try
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                foreach (Flight flight in flights)
+                {
+                    string type = flight is DomesticFlight ? "Domestic" : "International";
+                    string line = $"{flight.FlightNumber},{flight.Origin},{flight.Destination},{flight.BaseFare},{type}";
+                    writer.WriteLine(line);
+                }
+            }
+            Console.WriteLine("Flight data successfully written to the file.");
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"An error occurred while writing to the file: {ex.Message}");
+        }
     }
 }
-//Sorting with Traditional Loops:
-List<Flight> flightsSortedByFare = flights.OrderBy(f => f.CalculateFare()).ToList();
-
