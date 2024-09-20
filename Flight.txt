@@ -1,3 +1,4 @@
+FlightNumber,Origin,Destination,BaseFare,Type
 DF123,New York,Chicago,150,Domestic
 IF789,New York,London,500,International
 DF456,Los Angeles,San Francisco,120,Domestic
