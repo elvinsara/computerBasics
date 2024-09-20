@@ -1,168 +1,83 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-class FlightManager
-{
-    private Flight[] flightArray;  // Fixed-size array for flights
-    private List<Flight> flightList;  // Dynamic list for flights
-
-    public FlightManager(int arraySize)
-    {
-        flightArray = new Flight[arraySize];  // Initialize the array with fixed size
-        flightList = new List<Flight>();  // Initialize the dynamic list
-    }
-
-    // Adding flights to the array
-    public void AddFlightToArray(Flight flight, int index)
-    {
-        if (index >= 0 && index < flightArray.Length)
-        {
-            flightArray[index] = flight;
-            Console.WriteLine($"Flight added to array at index {index}: {flight.FlightNumber}");
-        }
-        else
-        {
-            Console.WriteLine("Invalid array index.");
-        }
-    }
-
-    // Adding flights to the list
-    public void AddFlightToList(Flight flight)
-    {
-        flightList.Add(flight);
-        Console.WriteLine($"Flight added to list: {flight.FlightNumber}");
-    }
-
-    // Removing flights from the array (setting null)
-    public void RemoveFlightFromArray(int index)
-    {
-        if (index >= 0 && index < flightArray.Length && flightArray[index] != null)
-        {
-            Console.WriteLine($"Flight removed from array at index {index}: {flightArray[index].FlightNumber}");
-            flightArray[index] = null;  // Set the element to null
-        }
-        else
-        {
-            Console.WriteLine("Invalid array index or no flight at the specified index.");
-        }
-    }
-
-    // Removing flights from the list
-    public void RemoveFlightFromList(string flightNumber)
-    {
-        Flight flightToRemove = flightList.Find(f => f.FlightNumber == flightNumber);
-        if (flightToRemove != null)
-        {
-            flightList.Remove(flightToRemove);
-            Console.WriteLine($"Flight removed from list: {flightToRemove.FlightNumber}");
-        }
-        else
-        {
-            Console.WriteLine("Flight not found in list.");
-        }
-    }
-
-    // Searching for flights in the array by flight number
-    public void SearchFlightInArray(string flightNumber)
-    {
-        foreach (Flight flight in flightArray)
-        {
-            if (flight != null && flight.FlightNumber == flightNumber)
-            {
-                Console.WriteLine($"Flight found in array: {flightNumber}");
-                flight.DisplayDetails();
-                return;
-            }
-        }
-        Console.WriteLine($"Flight not found in array: {flightNumber}");
-    }
-
-    // Searching for flights in the list by flight number
-    public void SearchFlightInList(string flightNumber)
-    {
-        Flight flight = flightList.Find(f => f.FlightNumber == flightNumber);
-        if (flight != null)
-        {
-            Console.WriteLine($"Flight found in list: {flightNumber}");
-            flight.DisplayDetails();
-        }
-        else
-        {
-            Console.WriteLine($"Flight not found in list: {flightNumber}");
-        }
-    }
-
-    // Display all flights in the array
-    public void DisplayAllFlightsInArray()
-    {
-        Console.WriteLine("Flights in array:");
-        foreach (Flight flight in flightArray)
-        {
-            if (flight != null)
-            {
-                flight.DisplayDetails();
-            }
-        }
-    }
-
-    // Display all flights in the list
-    public void DisplayAllFlightsInList()
-    {
-        Console.WriteLine("Flights in list:");
-        foreach (Flight flight in flightList)
-        {
-            flight.DisplayDetails();
-        }
-    }
-}
----------------------
 class Program
 {
     static void Main(string[] args)
     {
-        // Create flight manager with array size of 3
-        FlightManager flightManager = new FlightManager(3);
+        // Create a list of flights
+        List<Flight> flights = new List<Flight>
+        {
+            new DomesticFlight("DF123", "New York", "Chicago", 150),
+            new DomesticFlight("DF456", "Los Angeles", "San Francisco", 120),
+            new InternationalFlight("IF789", "New York", "London", 500),
+            new InternationalFlight("IF101", "San Francisco", "Tokyo", 700),
+            new DomesticFlight("DF111", "Miami", "Orlando", 90)
+        };
 
-        // Create some flight objects
-        DomesticFlight domesticFlight1 = new DomesticFlight("DF123", "New York", "Chicago", 150);
-        DomesticFlight domesticFlight2 = new DomesticFlight("DF456", "Los Angeles", "San Francisco", 120);
-        InternationalFlight internationalFlight1 = new InternationalFlight("IF789", "New York", "London", 500);
+        // 1. Filter flights by destination
+        var flightsToLondon = from flight in flights
+                              where flight.Destination == "London"
+                              select flight;
 
-        // Adding flights to array
-        flightManager.AddFlightToArray(domesticFlight1, 0);
-        flightManager.AddFlightToArray(internationalFlight1, 1);
-
-        // Adding flights to list
-        flightManager.AddFlightToList(domesticFlight2);
-        flightManager.AddFlightToList(internationalFlight1);
-
-        Console.WriteLine();
-
-        // Display flights
-        flightManager.DisplayAllFlightsInArray();
-        flightManager.DisplayAllFlightsInList();
-
-        Console.WriteLine();
-
-        // Search for a flight in the array and list
-        flightManager.SearchFlightInArray("DF123");
-        flightManager.SearchFlightInList("IF789");
+        Console.WriteLine("Flights to London:");
+        foreach (var flight in flightsToLondon)
+        {
+            flight.DisplayDetails();
+        }
 
         Console.WriteLine();
 
-        // Removing flights from array and list
-        flightManager.RemoveFlightFromArray(0);
-        flightManager.RemoveFlightFromList("DF456");
+        // 2. Sort flights by fare
+        var flightsSortedByFare = from flight in flights
+                                  orderby flight.CalculateFare() ascending
+                                  select flight;
+
+        Console.WriteLine("Flights sorted by fare:");
+        foreach (var flight in flightsSortedByFare)
+        {
+            flight.DisplayDetails();
+        }
 
         Console.WriteLine();
 
-        // Display flights again after removal
-        flightManager.DisplayAllFlightsInArray();
-        flightManager.DisplayAllFlightsInList();
+        // 3. Group flights by category (Domestic vs. International)
+        var groupedFlights = from flight in flights
+                             group flight by flight.GetType().Name into flightGroup
+                             select flightGroup;
+
+        Console.WriteLine("Flights grouped by category:");
+        foreach (var group in groupedFlights)
+        {
+            Console.WriteLine($"Category: {group.Key}");
+            foreach (var flight in group)
+            {
+                flight.DisplayDetails();
+            }
+        }
+
+        Console.WriteLine();
+        
+        // BONUS: Using LINQ to find the most expensive flight
+        var mostExpensiveFlight = flights.OrderByDescending(f => f.CalculateFare()).First();
+        Console.WriteLine("Most expensive flight:");
+        mostExpensiveFlight.DisplayDetails();
     }
 }
+-------------------------------------
 
-https://ervikashverma.sharepoint.com/
+var mostExpensiveFlight = flights.OrderByDescending(f => f.CalculateFare()).First();
+-------------
+//filter with traditional loop
+List<Flight> flightsToLondon = new List<Flight>();
+foreach (Flight flight in flights)
+{
+    if (flight.Destination == "London")
+    {
+        flightsToLondon.Add(flight);
+    }
+}
+//Sorting with Traditional Loops:
+List<Flight> flightsSortedByFare = flights.OrderBy(f => f.CalculateFare()).ToList();
 
-Elvin@ervikashverma.onmicrosoft.com
-Cuw08625
