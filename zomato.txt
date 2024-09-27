@@ -1,40 +1,78 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<restaurants>
-    <restaurant>
-        <name>Pizza Place</name>
-        <address>123 Main St</address>
-        <rating>4.5</rating>
-    </restaurant>
-    <restaurant>
-        <name>Burger Joint</name>
-        <address>456 Elm St</address>
-        <rating>4.0</rating>
-    </restaurant>
-</restaurants>
+Item,Price
+Margherita Pizza,9.99
+Garlic Bread,3.99
 
 
 using System;
-using System.Linq;
-using System.Xml.Linq;
+using System.IO;
 
-class ZomatoLikeApp
+class Program
 {
-    static void Main(string[] args)
+    static void Main()
     {
-        // Load the XML file
-        string xmlFilePath = "restaurants.xml";  // Path to the XML file
-        XDocument xmlDoc = XDocument.Load(xmlFilePath);
-
-        // Parse and display restaurant data
-        var restaurants = xmlDoc.Descendants("restaurant");
-
-        foreach (var restaurant in restaurants)
+        // Path to the CSV file
+        string filePath = "menu.csv";
+        
+        // Check if the file exists
+        if (File.Exists(filePath))
         {
-            string name = restaurant.Element("name")?.Value;
-            string address = restaurant.Element("address")?.Value;
-            string rating = restaurant.Element("rating")?.Value;
-
-            Console.WriteLine($"Restaurant: {name}, Address: {address}, Rating: {rating}");
+            // Read all lines from the file
+            string[] lines = File.ReadAllLines(filePath);
+            
+            // Skip the first line (header)
+            for (int i = 1; i < lines.Length; i++)
+            {
+                // Split each line by comma
+                string[] values = lines[i].Split(',');
+                
+                // Extract item and price
+                string itemName = values[0];
+                string itemPrice = values[1];
+                
+                // Display the formatted output
+                Console.WriteLine($"Item: {itemName}, Price: {itemPrice}");
+            }
         }
+        else
+        {
+            Console.WriteLine("File not found.");
+        }
+    }
+}
+using ClosedXML.Excel;
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        // Path to the Excel file
+        string filePath = "restaurants.xlsx";
+
+        // Create a new Excel workbook
+        using (var workbook = new XLWorkbook())
+        {
+            // Create a worksheet
+            var worksheet = workbook.Worksheets.Add("RestaurantData");
+
+            // Add headers to the worksheet
+            worksheet.Cell(1, 1).Value = "Name";
+            worksheet.Cell(1, 2).Value = "Address";
+            worksheet.Cell(1, 3).Value = "Rating";
+
+            // Add restaurant data (row by row)
+            worksheet.Cell(2, 1).Value = "Pasta House";
+            worksheet.Cell(2, 2).Value = "456 Elm St";
+            worksheet.Cell(2, 3).Value = 4.2;
+
+            worksheet.Cell(3, 1).Value = "Burger Joint";
+            worksheet.Cell(3, 2).Value = "123 Maple Ave";
+            worksheet.Cell(3, 3).Value = 3.8;
+
+            // Save the Excel file
+            workbook.SaveAs(filePath);
+        }
+
+        Console.WriteLine($"Excel file created at: {filePath}");
     }
 }
