@@ -1,26 +1,21 @@
-public class ExcelHandler
 {
-    public void CreateExcel(string filePath)
-    {
-        var workbook = new XLWorkbook();
-        var worksheet = workbook.Worksheets.Add("Restaurants");
-        worksheet.Cell(1, 1).Value = "Name";
-        worksheet.Cell(1, 2).Value = "Address";
-        worksheet.Cell(1, 3).Value = "Rating";
-        worksheet.Cell(2, 1).Value = "Pasta House";
-        worksheet.Cell(2, 2).Value = "456 Elm St";
-        worksheet.Cell(2, 3).Value = 4.2;
-        workbook.SaveAs(filePath);
-    }
+    "reviews": [
+        {"restaurant": "Pizza Place", "review": "Great pizza!", "rating": 5},
+        {"restaurant": "Pasta House", "review": "Too salty.", "rating": 2}
+    ]
+}
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
  
-    public void ReadExcel(string filePath)
+public class JsonHandler
+{
+    public void ParseJson(string jsonString)
     {
-        var workbook = new XLWorkbook(filePath);
-        var worksheet = workbook.Worksheet(1);
-        var name = worksheet.Cell(2, 1).GetString();
-        var address = worksheet.Cell(2, 2).GetString();
-        var rating = worksheet.Cell(2, 3).GetDouble();
- 
-        Console.WriteLine($"Read Restaurant: {name}, Address: {address}, Rating: {rating}");
+        var reviews = JsonConvert.DeserializeObject<JObject>(jsonString)["reviews"];
+        foreach (var review in reviews)
+        {
+            Console.WriteLine($"Review for {review["restaurant"]}: {review["review"]}, Rating: {review["rating"]}");
+        }
     }
 }
