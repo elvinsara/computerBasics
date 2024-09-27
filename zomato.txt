@@ -1,22 +1,23 @@
-  string jsonInput = @"
-        {
-            'reviews': [
-                {'restaurant': 'Pizza Place', 'review': 'Great pizza!', 'rating': 5},
-                {'restaurant': 'Pasta House', 'review': 'Too salty.', 'rating': 2}
-            ]
-        }";
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
- 
-public class JsonHandler
+public class Restaurant
 {
-    public void ParseJson(string jsonString)
+    public string Name { get; set; }
+    public string Address { get; set; }
+    public double Rating { get; set; }
+}
+
+[ApiController]
+[Route("api/[controller]")]
+public class RestaurantsController : ControllerBase
+{
+    private static List<Restaurant> restaurants = new List<Restaurant>
     {
-        var reviews = JsonConvert.DeserializeObject<JObject>(jsonString)["reviews"];
-        foreach (var review in reviews)
-        {
-            Console.WriteLine($"Review for {review["restaurant"]}: {review["review"]}, Rating: {review["rating"]}");
-        }
+        new Restaurant { Name = "Pizza Place", Address = "123 Main St", Rating = 4.5 },
+        new Restaurant { Name = "Pasta House", Address = "456 Elm St", Rating = 4.2 }
+    };
+ 
+    [HttpGet]
+    public ActionResult<IEnumerable<Restaurant>> Get()
+    {
+        return Ok(restaurants);
     }
 }
