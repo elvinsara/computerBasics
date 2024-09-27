@@ -1,9 +1,10 @@
-{
-    "reviews": [
-        {"restaurant": "Pizza Place", "review": "Great pizza!", "rating": 5},
-        {"restaurant": "Pasta House", "review": "Too salty.", "rating": 2}
-    ]
-}
+  string jsonInput = @"
+        {
+            'reviews': [
+                {'restaurant': 'Pizza Place', 'review': 'Great pizza!', 'rating': 5},
+                {'restaurant': 'Pasta House', 'review': 'Too salty.', 'rating': 2}
+            ]
+        }";
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
