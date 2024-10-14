@@ -1,0 +1,63 @@
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using System;
+
+namespace SeleniumLoginAutomation
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Step 1: Set up the Chrome WebDriver
+            IWebDriver driver = new ChromeDriver();
+
+            try
+            {
+                // Step 2: Navigate to the login page
+                driver.Navigate().GoToUrl("https://example.com/login");
+
+                // Step 3: Maximize the browser window
+                driver.Manage().Window.Maximize();
+
+                // Step 4: Find and interact with web elements using XPath and selectors
+                
+                // Locate the username field and enter the username
+                IWebElement usernameField = driver.FindElement(By.XPath("//input[@name='username']"));
+                usernameField.SendKeys("testuser");
+
+                // Locate the password field and enter the password
+                IWebElement passwordField = driver.FindElement(By.XPath("//input[@name='password']"));
+                passwordField.SendKeys("password123");
+
+                // Locate the login button and click it
+                IWebElement loginButton = driver.FindElement(By.XPath("//button[@type='submit']"));
+                loginButton.Click();
+
+                // Step 5: Add a short delay to allow time for page navigation
+                System.Threading.Thread.Sleep(2000);
+
+                // Step 6: Verify the login was successful
+                string expectedUrl = "https://example.com/dashboard";
+                string actualUrl = driver.Url;
+
+                if (actualUrl == expectedUrl)
+                {
+                    Console.WriteLine("Login successful. Current URL: " + actualUrl);
+                }
+                else
+                {
+                    Console.WriteLine("Login failed. Current URL: " + actualUrl);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+            finally
+            {
+                // Step 7: Close the browser
+                driver.Quit();
+            }
+        }
+    }
+}
