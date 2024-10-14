@@ -24,15 +24,15 @@ namespace SeleniumLoginAutomation
                 WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
                 // Wait until the username field is visible
-                IWebElement usernameField = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.Id("user-name")));
+                IWebElement usernameField = wait.Until(driver => driver.FindElement(By.Id("user-name")));
                 usernameField.SendKeys("standard_user");
 
                 // Wait until the password field is visible
-                IWebElement passwordField = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.Id("password")));
+                IWebElement passwordField = wait.Until(driver => driver.FindElement(By.Id("password")));
                 passwordField.SendKeys("secret_sauce");
 
                 // Wait until the login button is clickable
-                IWebElement loginButton = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(By.XPath("//input[@type='submit']")));
+                IWebElement loginButton = wait.Until(driver => driver.FindElement(By.XPath("//input[@type='submit']")));
                 loginButton.Click();
 
                 // Step 5: Verify the login was successful by checking the URL
