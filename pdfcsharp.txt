@@ -1,59 +1,95 @@
-using System;
-using System.IO;
+Name,Amount
+Alice,200
+Bob,150
+Charlie,250
+
+
 using iTextSharp.text;
 using iTextSharp.text.pdf;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 class Program
 {
     static void Main(string[] args)
     {
-        string title = "Monthly Sales Report";
-        string text = "Total Sales: $10,000";
-        string imagePath = @"C:\images\sales_chart.png";
-        string outputPath = @"SalesReport.pdf";
+        string csvFilePath = @"C:\data\sales_data.csv";
+        string pdfFilePath = @"C:\output\SummaryReport.pdf";
 
         try
         {
-            // Create a new PDF document
-            Document doc = new Document(PageSize.A4);
-            PdfWriter.GetInstance(doc, new FileStream(outputPath, FileMode.Create));
-            doc.Open();
+            // Read and parse CSV file
+            var csvData = ReadCsvFile(csvFilePath);
 
-            // Add the title
-            Font titleFont = FontFactory.GetFont("Arial", 18, Font.BOLD);
-            Paragraph titleParagraph = new Paragraph(title, titleFont);
-            titleParagraph.Alignment = Element.ALIGN_CENTER;
-            doc.Add(titleParagraph);
+            // Generate PDF report
+            GeneratePdfReport(csvData, pdfFilePath);
 
-            // Add a blank space after the title
-            doc.Add(new Paragraph("\n"));
-
-            // Add the text
-            Font textFont = FontFactory.GetFont("Arial", 12, Font.NORMAL);
-            Paragraph textParagraph = new Paragraph(text, textFont);
-            textParagraph.Alignment = Element.ALIGN_LEFT;
-            doc.Add(textParagraph);
-
-            // Add the image
-            if (File.Exists(imagePath))
-            {
-                iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(imagePath);
-                image.Alignment = Element.ALIGN_CENTER;
-                doc.Add(image);
-            }
-            else
-            {
-                Console.WriteLine("Image file not found: " + imagePath);
-            }
-
-            // Close the document
-            doc.Close();
-
-            Console.WriteLine("PDF generated successfully at " + outputPath);
+            Console.WriteLine("PDF report generated successfully at: " + pdfFilePath);
         }
         catch (Exception ex)
         {
-            Console.WriteLine("An error occurred: " + ex.Message);
+            Console.WriteLine("Error: " + ex.Message);
         }
     }
-}
+
+    // Function to read and parse CSV file
+    static List<Tuple<string, string>> ReadCsvFile(string csvFilePath)
+    {
+        var csvData = new List<Tuple<string, string>>();
+        using (var reader = new StreamReader(csvFilePath))
+        {
+            string line;
+            // Skip header
+            reader.ReadLine();
+
+            // Read each line
+            while ((line = reader.ReadLine()) != null)
+            {
+                var values = line.Split(',');
+                csvData.Add(new Tuple<string, string>(values[0], values[1]));
+            }
+        }
+        return csvData;
+    }
+
+    // Function to generate PDF report
+    static void GeneratePdfReport(List<Tuple<string, string>> csvData, string pdfFilePath)
+    {
+        // Initialize document
+        Document document = new Document();
+        PdfWriter.GetInstance(document, new FileStream(pdfFilePath, FileMode.Create));
+        document.Open();
+
+        // Add title
+        Font titleFont = FontFactory.GetFont("Arial", 18, Font.BOLD);
+        Paragraph title = new Paragraph("Sales Summary Report", titleFont)
+        {
+            Alignment = Element.ALIGN_CENTER
+        };
+        document.Add(title);
+
+        // Add line break
+        document.Add(new Paragraph("\n"));
+
+        // Create PDF table with 2 columns (Name, Amount)
+        PdfPTable table = new PdfPTable(2);
+        table.WidthPercentage = 100;
+        table.SetWidths(new float[] { 1, 1 });
+
+        // Add table headers
+        AddCellToTable(table, "Name", FontFactory.GetFont("Arial", 12, Font.BOLD), BaseColor.LIGHT_GRAY);
+        AddCellToTable(table, "Amount", FontFactory.GetFont("Arial", 12, Font.BOLD), BaseColor.LIGHT_GRAY);
+
+        // Add data rows from CSV
+        foreach (var row in csvData)
+        {
+            AddCellToTable(table, row.Item1, FontFactory.GetFont("Arial", 12, Font.NORMAL), BaseColor.WHITE);
+            AddCellToTable(table, row.Item2, FontFactory.GetFont("Arial", 12, Font.NORMAL), BaseColor.WHITE);
+        }
+
+        // Add table to document
+        document.Add(table);
+
+        // Close document
+        document
