@@ -1,16 +1,19 @@
 using Microsoft.SharePoint.Client;
 using System;
+using System.IO;
 using System.Security;
 
-namespace SharePointCredentialsApp
+namespace SharePointFileUploadApp
 {
     class Program
     {
         static void Main(string[] args)
         {
             string siteUrl = "https://yourtenant.sharepoint.com/sites/yoursite";
+            string libraryName = "Documents";
+            string filePath = @"C:\path\to\yourfile.docx";
             string username = "yourusername@domain.com";
-            string password = "yourpassword"; // for example purposes, get it securely
+            string password = "yourpassword"; // For example purposes, consider secure ways to handle the password.
 
             // Convert password to SecureString
             SecureString securePassword = new SecureString();
@@ -24,16 +27,42 @@ namespace SharePointCredentialsApp
             {
                 using (ClientContext context = new ClientContext(siteUrl))
                 {
-                    // Use SharePointOnlineCredentials
                     context.Credentials = new SharePointOnlineCredentials(username, securePassword);
 
-                    // Load web and execute query
+                    // Get the target document library
                     Web web = context.Web;
-                    context.Load(web);
+                    List docLibrary = web.Lists.GetByTitle(libraryName);
+                    context.Load(docLibrary);
                     context.ExecuteQuery();
 
-                    Console.WriteLine("Connected to site: " + web.Title);
+                    // Read the file to be uploaded
+                    byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+                    string fileName = Path.GetFileName(filePath);
+
+                    // Prepare file information
+                    FileCreationInformation newFile = new FileCreationInformation
+                    {
+                        Content = fileBytes,
+                        Url = fileName,
+                        Overwrite = true
+                    };
+
+                    // Upload the file to the document library
+                    Microsoft.SharePoint.Client.File uploadFile = docLibrary.RootFolder.Files.Add(newFile);
+                    context.Load(uploadFile);
+                    context.ExecuteQuery();
+
+                    // Output success message
+                    Console.WriteLine($"File uploaded successfully: {fileName}");
                 }
+            }
+            catch (FileNotFoundException fnfEx)
+            {
+                Console.WriteLine("File not found: " + fnfEx.Message);
+            }
+            catch (UnauthorizedAccessException authEx)
+            {
+                Console.WriteLine("Access denied: " + authEx.Message);
             }
             catch (Exception ex)
             {
