@@ -1,68 +1,44 @@
-using System;
 using Microsoft.SharePoint.Client;
+using System;
+using System.Security;
 
-namespace SharePointLibraryApp
+namespace SharePointCredentialsApp
 {
     class Program
     {
         static void Main(string[] args)
         {
             string siteUrl = "https://yourtenant.sharepoint.com/sites/yoursite";
-            string libraryName = "Documents";
+            string username = "yourusername@domain.com";
+            string password = "yourpassword"; // for example purposes, get it securely
+
+            // Convert password to SecureString
+            SecureString securePassword = new SecureString();
+            foreach (char c in password.ToCharArray())
+            {
+                securePassword.AppendChar(c);
+            }
+            securePassword.MakeReadOnly();
 
             try
             {
-                // Connect to SharePoint Online
                 using (ClientContext context = new ClientContext(siteUrl))
                 {
-                    // Authentication (username and password)
-                    context.Credentials = new SharePointOnlineCredentials("yourusername@domain.com", GetPassword());
+                    // Use SharePointOnlineCredentials
+                    context.Credentials = new SharePointOnlineCredentials(username, securePassword);
 
-                    // Get the target document library
-                    List list = context.Web.Lists.GetByTitle(libraryName);
-
-                    // Load the items from the list
-                    CamlQuery query = CamlQuery.CreateAllItemsQuery();
-                    ListItemCollection items = list.GetItems(query);
-
-                    context.Load(items);
+                    // Load web and execute query
+                    Web web = context.Web;
+                    context.Load(web);
                     context.ExecuteQuery();
 
-                    // Output document names
-                    Console.WriteLine("Documents in Library:");
-                    foreach (ListItem listItem in items)
-                    {
-                        Console.WriteLine(listItem["FileLeafRef"]);
-                    }
+                    Console.WriteLine("Connected to site: " + web.Title);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                Console.WriteLine("Error: " + ex.Message);
             }
-catch (ClientRequestException cre)
-{
-    Console.WriteLine($"Connection failed: {cre.Message}");
-}
-catch (ServerException se)
-{
-    Console.WriteLine($"Server error: {se.Message}");
-}
-
-        }
-
-        // Helper method to retrieve the secure password (can be replaced by a more secure approach)
-        private static System.Security.SecureString GetPassword()
-        {
-            Console.Write("Enter password: ");
-            string pass = Console.ReadLine();
-            var securePass = new System.Security.SecureString();
-            foreach (char c in pass)
-            {
-                securePass.AppendChar(c);
-            }
-            return securePass;
         }
     }
 }
-
