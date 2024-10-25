@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace OutlookCalendarIntegration
 {
@@ -10,7 +10,6 @@ namespace OutlookCalendarIntegration
     {
         private static readonly string clientId = "YOUR_CLIENT_ID";
         private static readonly string tenantId = "YOUR_TENANT_ID";
-        private static readonly string clientSecret = "YOUR_CLIENT_SECRET";
 
         static async Task Main(string[] args)
         {
@@ -23,20 +22,36 @@ namespace OutlookCalendarIntegration
                     Console.WriteLine($"- {calendarEvent.Subject}: {calendarEvent.Start.DateTime}");
                 }
             }
+            else
+            {
+                Console.WriteLine("No upcoming events.");
+            }
         }
 
         private static async Task<IList<Event>> GetUpcomingEvents()
         {
             try
             {
-                var clientApp = ConfidentialClientApplicationBuilder.Create(clientId)
-                    .WithClientSecret(clientSecret)
-                    .WithAuthority($"https://login.microsoftonline.com/{tenantId}")
+                // Set up interactive authentication
+                var clientApp = PublicClientApplicationBuilder.Create(clientId)
+                    .WithTenantId(tenantId)
+                    .WithRedirectUri("http://localhost") // Ensure this is configured in Azure AD
                     .Build();
 
-                var authProvider = new ClientCredentialProvider(clientApp);
-                var graphClient = new GraphServiceClient(authProvider);
+                // Scopes for accessing calendar data
+                var scopes = new[] { "Calendars.Read" };
 
+                // Prompt user to sign in
+                var authResult = await clientApp.AcquireTokenInteractive(scopes).ExecuteAsync();
+
+                var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider(
+                    requestMessage =>
+                    {
+                        requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+                        return Task.CompletedTask;
+                    }));
+
+                // Retrieve events
                 var events = await graphClient.Me.Events
                     .Request()
                     .Select(e => new { e.Subject, e.Start, e.End })
