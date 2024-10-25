@@ -1,58 +1,86 @@
-private static async Task<IList<Event>> GetUpcomingEvents()
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Azure.Identity;
+using Microsoft.Graph;
+using Microsoft.Graph.Models;
+
+namespace OutlookCalendarIntegration
 {
-    try
+    class Program
     {
-        // Set up authentication
-        var clientSecretCredential = new ClientSecretCredential(
-            tenantId,
-            clientId,
-            clientSecret);
+        private static readonly string tenantId = "YOUR_TENANT_ID";
+        private static readonly string clientId = "YOUR_CLIENT_ID";
+        private static readonly string clientSecret = "YOUR_CLIENT_SECRET";
 
-        var graphClient = new GraphServiceClient(clientSecretCredential, new[] { "https://graph.microsoft.com/.default" });
-
-        // Create the URL for the request
-        var url = graphClient.Me.Events.Request().GetHttpRequestMessage().RequestUri.ToString();
-
-        // Prepare the query parameters
-        var queryParameters = new List<string>
+        static async Task Main(string[] args)
         {
-            $"$filter=start/dateTime ge '{DateTime.UtcNow.ToString("o")}'",
-            "$orderby=start/dateTime",
-            "$select=subject,start,end"
-        };
+            var events = await GetUpcomingEvents();
+            if (events != null && events.Count > 0)
+            {
+                Console.WriteLine("Upcoming Events:");
+                foreach (var calendarEvent in events)
+                {
+                    Console.WriteLine($"- {calendarEvent.Subject}: {calendarEvent.Start.DateTime}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No upcoming events.");
+            }
+        }
 
-        // Combine the URL with query parameters
-        var fullUrl = $"{url}&{string.Join("&", queryParameters)}";
+        private static async Task<IList<Event>> GetUpcomingEvents()
+        {
+            try
+            {
+                // Authenticate using ClientSecretCredential
+                var clientSecretCredential = new ClientSecretCredential(
+                    tenantId,
+                    clientId,
+                    clientSecret);
 
-        // Create an HttpRequestMessage
-        var requestMessage = new HttpRequestMessage(HttpMethod.Get, fullUrl);
+                // Create a new HttpClient
+                using var httpClient = new HttpClient();
 
-        // Send the request
-        var response = await graphClient.HttpProvider.SendAsync(requestMessage);
+                // Get the access token
+                var token = await clientSecretCredential.GetTokenAsync(new Azure.Core.TokenRequestContext(new[] { "https://graph.microsoft.com/.default" }));
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
-        // Ensure successful response
-        response.EnsureSuccessStatusCode();
+                // Construct the URL for the events
+                var url = $"https://graph.microsoft.com/v1.0/me/events?$filter=start/dateTime ge '{DateTime.UtcNow.ToString("o")}'&$orderby=start/dateTime&$select=subject,start,end";
 
-        // Parse the response
-        var result = await response.Content.ReadAsStringAsync();
-        var events = JsonSerializer.Deserialize<EventCollection>(result);
+                // Send the request
+                var response = await httpClient.GetAsync(url);
 
-        return events?.Value; // Return the list of events
+                // Ensure the response is successful
+                response.EnsureSuccessStatusCode();
+
+                // Parse the response
+                var content = await response.Content.ReadAsStringAsync();
+                var eventCollection = JsonSerializer.Deserialize<EventCollection>(content);
+
+                return eventCollection?.Value; // Return the list of events
+            }
+            catch (ServiceException svcEx)
+            {
+                Console.WriteLine($"Graph API request error: {svcEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+            }
+
+            return null;
+        }
     }
-    catch (ServiceException svcEx)
+
+    // Define a model for the response
+    public class EventCollection
     {
-        Console.WriteLine($"Graph API request error: {svcEx.Message}");
+        public IList<Event> Value { get; set; }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Unexpected error: {ex.Message}");
-    }
-
-    return null;
-}
-
-// Define a model for the response
-public class EventCollection
-{
-    public IList<Event> Value { get; set; }
 }
