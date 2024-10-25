@@ -41,18 +41,12 @@ namespace OutlookCalendarIntegration
 
                 var graphClient = new GraphServiceClient(clientSecretCredential, new[] { "https://graph.microsoft.com/.default" });
 
-                // Define query options to retrieve events
-                var options = new List<QueryOption>
-                {
-                    new QueryOption("startDateTime", DateTime.Now.ToString("o")),
-                    new QueryOption("endDateTime", DateTime.Now.AddDays(30).ToString("o"))
-                };
-
-                // Retrieve calendar events
-                var events = await graphClient.Me.CalendarView
-                    .Request(options)
-                    .Select("subject,start,end")
+                // Retrieve all events (upcoming events can be filtered by start time)
+                var events = await graphClient.Me.Events
+                    .Request()
+                    .Filter($"start/dateTime ge '{DateTime.UtcNow.ToString("o")}'")
                     .OrderBy("start/dateTime")
+                    .Select(e => new { e.Subject, e.Start, e.End })
                     .GetAsync();
 
                 return events.CurrentPage;
