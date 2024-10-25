@@ -1,15 +1,16 @@
-using Microsoft.Graph;
-using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Azure.Identity;
+using Microsoft.Graph;
 
 namespace OutlookCalendarIntegration
 {
     class Program
     {
-        private static readonly string clientId = "YOUR_CLIENT_ID";
         private static readonly string tenantId = "YOUR_TENANT_ID";
+        private static readonly string clientId = "YOUR_CLIENT_ID";
+        private static readonly string clientSecret = "YOUR_CLIENT_SECRET";
 
         static async Task Main(string[] args)
         {
@@ -32,29 +33,22 @@ namespace OutlookCalendarIntegration
         {
             try
             {
-                var clientApp = PublicClientApplicationBuilder.Create(clientId)
-                    .WithTenantId(tenantId)
-                    .WithRedirectUri("http://localhost")
-                    .Build();
+                // Authenticate using ClientSecretCredential
+                var clientSecretCredential = new ClientSecretCredential(
+                    tenantId,
+                    clientId,
+                    clientSecret);
 
-                var scopes = new[] { "Calendars.Read" };
-                var authResult = await clientApp.AcquireTokenInteractive(scopes).ExecuteAsync();
+                var graphClient = new GraphServiceClient(clientSecretCredential, new[] { "https://graph.microsoft.com/.default" });
 
-                var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider(
-                    requestMessage =>
-                    {
-                        requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", authResult.AccessToken);
-                        return Task.CompletedTask;
-                    }));
-
-                // Define query options for event start date
+                // Define query options to retrieve events
                 var options = new List<QueryOption>
                 {
                     new QueryOption("startDateTime", DateTime.Now.ToString("o")),
                     new QueryOption("endDateTime", DateTime.Now.AddDays(30).ToString("o"))
                 };
 
-                // Retrieve events with date filtering and properties selection
+                // Retrieve calendar events
                 var events = await graphClient.Me.CalendarView
                     .Request(options)
                     .Select("subject,start,end")
@@ -62,10 +56,6 @@ namespace OutlookCalendarIntegration
                     .GetAsync();
 
                 return events.CurrentPage;
-            }
-            catch (MsalException msalEx)
-            {
-                Console.WriteLine($"Authentication error: {msalEx.Message}");
             }
             catch (ServiceException svcEx)
             {
