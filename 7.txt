@@ -45,14 +45,14 @@ namespace SharePointListIntegration
         {
             var client = GetAuthenticatedGraphClient();
 
-            // Get the site by using its URL
-            var site = await client.Sites["https://yourtenant.sharepoint.com/sites/yoursite"].Request().GetAsync();
+            // Get the site using its full URL
+            var site = await client.Sites["yourtenant.sharepoint.com"].Sites["yoursite"].GetAsync();
 
             // Get the list by name
-            var list = await client.Sites[site.Id].Lists[listName].Request().GetAsync();
+            var list = await client.Sites[site.Id].Lists[listName].GetAsync();
 
             // Get items from the specified SharePoint list
-            var items = await client.Sites[site.Id].Lists[list.Id].Items.Request().GetAsync();
+            var items = await client.Sites[site.Id].Lists[list.Id].Items.GetAsync();
 
             var taskList = new List<SharePointTask>();
 
