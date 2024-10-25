@@ -1,8 +1,8 @@
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Graph;
-using Microsoft.Identity.Client;
 
 namespace OutlookCalendarIntegration
 {
@@ -14,7 +14,7 @@ namespace OutlookCalendarIntegration
         static async Task Main(string[] args)
         {
             var events = await GetUpcomingEvents();
-            if (events != null)
+            if (events != null && events.Count > 0)
             {
                 Console.WriteLine("Upcoming Events:");
                 foreach (var calendarEvent in events)
@@ -32,16 +32,12 @@ namespace OutlookCalendarIntegration
         {
             try
             {
-                // Set up interactive authentication
                 var clientApp = PublicClientApplicationBuilder.Create(clientId)
                     .WithTenantId(tenantId)
-                    .WithRedirectUri("http://localhost") // Ensure this is configured in Azure AD
+                    .WithRedirectUri("http://localhost")
                     .Build();
 
-                // Scopes for accessing calendar data
                 var scopes = new[] { "Calendars.Read" };
-
-                // Prompt user to sign in
                 var authResult = await clientApp.AcquireTokenInteractive(scopes).ExecuteAsync();
 
                 var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider(
@@ -51,20 +47,36 @@ namespace OutlookCalendarIntegration
                         return Task.CompletedTask;
                     }));
 
-                // Retrieve events
-                var events = await graphClient.Me.Events
-                    .Request()
-                    .Select(e => new { e.Subject, e.Start, e.End })
+                // Define query options for event start date
+                var options = new List<QueryOption>
+                {
+                    new QueryOption("startDateTime", DateTime.Now.ToString("o")),
+                    new QueryOption("endDateTime", DateTime.Now.AddDays(30).ToString("o"))
+                };
+
+                // Retrieve events with date filtering and properties selection
+                var events = await graphClient.Me.CalendarView
+                    .Request(options)
+                    .Select("subject,start,end")
                     .OrderBy("start/dateTime")
                     .GetAsync();
 
                 return events.CurrentPage;
             }
+            catch (MsalException msalEx)
+            {
+                Console.WriteLine($"Authentication error: {msalEx.Message}");
+            }
+            catch (ServiceException svcEx)
+            {
+                Console.WriteLine($"Graph API request error: {svcEx.Message}");
+            }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error retrieving events: {ex.Message}");
-                return null;
+                Console.WriteLine($"Unexpected error: {ex.Message}");
             }
+
+            return null;
         }
     }
 }
