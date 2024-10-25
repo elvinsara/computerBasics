@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
@@ -44,10 +45,10 @@ namespace SharePointListIntegration
         {
             var client = GetAuthenticatedGraphClient();
 
-            // Get the site ID using the site URL
-            var site = await client.Sites.GetByPath("yoursite", "yourtenant.sharepoint.com").Request().GetAsync();
+            // Get the site by using its URL
+            var site = await client.Sites["https://yourtenant.sharepoint.com/sites/yoursite"].Request().GetAsync();
 
-            // Get the list ID based on the list name
+            // Get the list by name
             var list = await client.Sites[site.Id].Lists[listName].Request().GetAsync();
 
             // Get items from the specified SharePoint list
