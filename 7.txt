@@ -1,86 +1,86 @@
 using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Azure.Identity;
-using Microsoft.Graph;
-using Microsoft.Graph.Models;
+using System.IO;
+using Outlook = Microsoft.Office.Interop.Outlook;
 
-namespace OutlookCalendarIntegration
+namespace OutlookEmailAutomation
 {
     class Program
     {
-        private static readonly string tenantId = "YOUR_TENANT_ID";
-        private static readonly string clientId = "YOUR_CLIENT_ID";
-        private static readonly string clientSecret = "YOUR_CLIENT_SECRET";
-
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
-            var events = await GetUpcomingEvents();
-            if (events != null && events.Count > 0)
+            // Sample input
+            string recipient = "recipient@example.com";
+            string subject = "Monthly Report";
+            string body = "Please find the attached report.";
+            string attachmentPath = @"C:\path\to\report.pdf"; // Change to your attachment path
+
+            // Send the email
+            bool result = SendEmail(recipient, subject, body, attachmentPath);
+
+            // Output the result
+            if (result)
             {
-                Console.WriteLine("Upcoming Events:");
-                foreach (var calendarEvent in events)
-                {
-                    Console.WriteLine($"- {calendarEvent.Subject}: {calendarEvent.Start.DateTime}");
-                }
+                Console.WriteLine($"Email sent successfully to {recipient}");
             }
             else
             {
-                Console.WriteLine("No upcoming events.");
+                Console.WriteLine($"Failed to send email to {recipient}");
             }
         }
 
-        private static async Task<IList<Event>> GetUpcomingEvents()
+        static bool SendEmail(string recipient, string subject, string body, string attachmentPath)
         {
             try
             {
-                // Authenticate using ClientSecretCredential
-                var clientSecretCredential = new ClientSecretCredential(
-                    tenantId,
-                    clientId,
-                    clientSecret);
+                // Validate email address
+                if (!IsValidEmail(recipient))
+                {
+                    Console.WriteLine("Invalid email address.");
+                    return false;
+                }
 
-                // Create a new HttpClient
-                using var httpClient = new HttpClient();
+                // Create a new Outlook application
+                Outlook.Application outlookApp = new Outlook.Application();
+                Outlook.MailItem mailItem = (Outlook.MailItem)outlookApp.CreateItem(Outlook.OlItemType.olMailItem);
 
-                // Get the access token
-                var token = await clientSecretCredential.GetTokenAsync(new Azure.Core.TokenRequestContext(new[] { "https://graph.microsoft.com/.default" }));
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+                // Set email properties
+                mailItem.To = recipient;
+                mailItem.Subject = subject;
+                mailItem.Body = body;
 
-                // Construct the URL for the events
-                var url = $"https://graph.microsoft.com/v1.0/me/events?$filter=start/dateTime ge '{DateTime.UtcNow.ToString("o")}'&$orderby=start/dateTime&$select=subject,start,end";
+                // Add attachment if it exists
+                if (File.Exists(attachmentPath))
+                {
+                    mailItem.Attachments.Add(attachmentPath);
+                }
+                else
+                {
+                    Console.WriteLine("Attachment not found.");
+                    return false;
+                }
 
-                // Send the request
-                var response = await httpClient.GetAsync(url);
-
-                // Ensure the response is successful
-                response.EnsureSuccessStatusCode();
-
-                // Parse the response
-                var content = await response.Content.ReadAsStringAsync();
-                var eventCollection = JsonSerializer.Deserialize<EventCollection>(content);
-
-                return eventCollection?.Value; // Return the list of events
-            }
-            catch (ServiceException svcEx)
-            {
-                Console.WriteLine($"Graph API request error: {svcEx.Message}");
+                // Send the email
+                mailItem.Send();
+                return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Unexpected error: {ex.Message}");
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return false;
             }
-
-            return null;
         }
-    }
 
-    // Define a model for the response
-    public class EventCollection
-    {
-        public IList<Event> Value { get; set; }
+        static bool IsValidEmail(string email)
+        {
+            try
+            {
+                var emailAddress = new System.Net.Mail.MailAddress(email);
+                return emailAddress.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
