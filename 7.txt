@@ -1,39 +1,35 @@
 using System;
-using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using Microsoft.Graph;
-using Microsoft.Identity.Client;
+using Microsoft.SharePoint.Client;
+using System.Security;
 
-namespace SharePointListIntegration
+namespace SharePointListUpdater
 {
     class Program
     {
-        // Replace with your application credentials and site details
-        private static readonly string clientId = "YOUR_CLIENT_ID";       // Azure app registration client ID
-        private static readonly string tenantId = "YOUR_TENANT_ID";       // Azure tenant ID
-        private static readonly string clientSecret = "YOUR_CLIENT_SECRET"; // Azure app registration client secret
-        private static readonly string siteUrl = "https://yourtenant.sharepoint.com/sites/yoursite"; // SharePoint site URL
-        private static readonly string listName = "Tasks"; // Name of the SharePoint list
-
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
+            // Gather user input
+            Console.WriteLine("Enter SharePoint Site URL:");
+            string siteUrl = Console.ReadLine();
+
+            Console.WriteLine("Enter List Name:");
+            string listName = Console.ReadLine();
+
+            Console.WriteLine("Enter Item ID:");
+            int itemId;
+            while (!int.TryParse(Console.ReadLine(), out itemId))
+            {
+                Console.WriteLine("Invalid input. Please enter a valid Item ID:");
+            }
+
+            Console.WriteLine("Enter Updated Title:");
+            string updatedTitle = Console.ReadLine();
+
+            // Update the list item
             try
             {
-                var tasks = await GetSharePointListItems();
-                Console.WriteLine("Tasks List:");
-
-                if (tasks.Count == 0)
-                {
-                    Console.WriteLine("No tasks found.");
-                }
-                else
-                {
-                    foreach (var task in tasks)
-                    {
-                        Console.WriteLine($"- {task.Title}: {task.Description}");
-                    }
-                }
+                UpdateListItem(siteUrl, listName, itemId, updatedTitle);
+                Console.WriteLine($"Item updated successfully: Task ID {itemId}");
             }
             catch (Exception ex)
             {
@@ -41,62 +37,38 @@ namespace SharePointListIntegration
             }
         }
 
-        private static async Task<List<SharePointTask>> GetSharePointListItems()
+        static void UpdateListItem(string siteUrl, string listName, int itemId, string updatedTitle)
         {
-            var client = GetAuthenticatedGraphClient();
+            // Credentials for authentication
+            Console.WriteLine("Enter your username:");
+            string username = Console.ReadLine();
 
-            // Get the site using its full URL
-            var site = await client.Sites["yourtenant.sharepoint.com"].Sites["yoursite"].GetAsync();
-
-            // Get the list by name
-            var list = await client.Sites[site.Id].Lists[listName].GetAsync();
-
-            // Get items from the specified SharePoint list
-            var items = await client.Sites[site.Id].Lists[list.Id].Items.GetAsync();
-
-            var taskList = new List<SharePointTask>();
-
-            foreach (var item in items)
+            Console.WriteLine("Enter your password:");
+            SecureString password = new SecureString();
+            foreach (char c in Console.ReadLine())
             {
-                // Assuming Title and Description are valid fields in your list
-                var task = new SharePointTask
-                {
-                    Title = item.Fields.AdditionalData.ContainsKey("Title") ? item.Fields.AdditionalData["Title"].ToString() : "No Title",
-                    Description = item.Fields.AdditionalData.ContainsKey("Description") ? item.Fields.AdditionalData["Description"].ToString() : "No Description"
-                };
-                taskList.Add(task);
+                password.AppendChar(c);
             }
 
-            return taskList;
-        }
-
-        private static GraphServiceClient GetAuthenticatedGraphClient()
-        {
-            var app = ConfidentialClientApplicationBuilder.Create(clientId)
-                .WithTenantId(tenantId)
-                .WithClientSecret(clientSecret)
-                .Build();
-
-            var scopes = new[] { "https://graph.microsoft.com/.default" };
-
-            // Acquire token for Microsoft Graph
-            var authResult = app.AcquireTokenForClient(scopes).ExecuteAsync().Result;
-
-            // Create GraphServiceClient with built-in authentication handling
-            var graphClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) =>
+            using (ClientContext context = new ClientContext(siteUrl))
             {
-                // Add the token to the request automatically
-                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
-                return Task.CompletedTask;
-            }));
+                context.Credentials = new SharePointOnlineCredentials(username, password);
 
-            return graphClient;
+                // Get the list
+                List list = context.Web.Lists.GetByTitle(listName);
+                context.Load(list);
+                context.ExecuteQuery();
+
+                // Get the item to update
+                ListItem item = list.GetItemById(itemId);
+                context.Load(item);
+                context.ExecuteQuery();
+
+                // Update the item
+                item["Title"] = updatedTitle; // Assuming "Title" is the field to update
+                item.Update();
+                context.ExecuteQuery();
+            }
         }
-    }
-
-    public class SharePointTask
-    {
-        public string Title { get; set; }
-        public string Description { get; set; }
     }
 }
