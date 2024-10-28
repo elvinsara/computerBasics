@@ -1,7 +1,10 @@
+Install-Package Serilog
+Install-Package Serilog.Sinks.File
+Install-Package Serilog.Extensions.Logging
+
+
 using System;
-using System.IO;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace ConsoleLoggingExample
 {
@@ -9,33 +12,37 @@ namespace ConsoleLoggingExample
     {
         static void Main(string[] args)
         {
-            // Setup the logging service
-            var serviceProvider = new ServiceCollection()
-                .AddLogging(configure => configure
-                    .AddFile("Logs/log.txt", append: true)) // Log to a file
-                .BuildServiceProvider();
-
-            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+            // Configure Serilog
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.File("Logs/log.txt", 
+                              rollingInterval: RollingInterval.Day,
+                              outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss}] {Message}{NewLine}")
+                .CreateLogger();
 
             try
             {
                 // Log messages
-                logger.LogInformation("Application started");
-                PerformOperation(logger);
-                logger.LogInformation("Application ended");
+                Log.Information("Application started");
+                PerformOperation();
+                Log.Information("Application ended");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while running the application");
+                Log.Error(ex, "An error occurred while running the application");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
             }
         }
 
-        static void PerformOperation(ILogger logger)
+        static void PerformOperation()
         {
-            logger.LogInformation("Performing operation...");
+            Log.Information("Performing operation...");
             // Simulate some work
             System.Threading.Thread.Sleep(1000); // Delay to mimic operation
-            logger.LogInformation("Operation completed successfully.");
+            Log.Information("Operation completed successfully.");
         }
     }
 }
