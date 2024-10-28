@@ -1,74 +1,41 @@
 using System;
-using Microsoft.SharePoint.Client;
-using System.Security;
+using System.IO;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace SharePointListUpdater
+namespace ConsoleLoggingExample
 {
     class Program
     {
         static void Main(string[] args)
         {
-            // Gather user input
-            Console.WriteLine("Enter SharePoint Site URL:");
-            string siteUrl = Console.ReadLine();
+            // Setup the logging service
+            var serviceProvider = new ServiceCollection()
+                .AddLogging(configure => configure
+                    .AddFile("Logs/log.txt", append: true)) // Log to a file
+                .BuildServiceProvider();
 
-            Console.WriteLine("Enter List Name:");
-            string listName = Console.ReadLine();
+            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
-            Console.WriteLine("Enter Item ID:");
-            int itemId;
-            while (!int.TryParse(Console.ReadLine(), out itemId))
-            {
-                Console.WriteLine("Invalid input. Please enter a valid Item ID:");
-            }
-
-            Console.WriteLine("Enter Updated Title:");
-            string updatedTitle = Console.ReadLine();
-
-            // Update the list item
             try
             {
-                UpdateListItem(siteUrl, listName, itemId, updatedTitle);
-                Console.WriteLine($"Item updated successfully: Task ID {itemId}");
+                // Log messages
+                logger.LogInformation("Application started");
+                PerformOperation(logger);
+                logger.LogInformation("Application ended");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                logger.LogError(ex, "An error occurred while running the application");
             }
         }
 
-        static void UpdateListItem(string siteUrl, string listName, int itemId, string updatedTitle)
+        static void PerformOperation(ILogger logger)
         {
-            // Credentials for authentication
-            Console.WriteLine("Enter your username:");
-            string username = Console.ReadLine();
-
-            Console.WriteLine("Enter your password:");
-            SecureString password = new SecureString();
-            foreach (char c in Console.ReadLine())
-            {
-                password.AppendChar(c);
-            }
-
-            using (ClientContext context = new ClientContext(siteUrl))
-            {
-                context.Credentials = new SharePointOnlineCredentials(username, password);
-
-                // Get the list
-                List list = context.Web.Lists.GetByTitle(listName);
-                context.Load(list);
-                context.ExecuteQuery();
-
-                // Get the item to update
-                ListItem item = list.GetItemById(itemId);
-                context.Load(item);
-                context.ExecuteQuery();
-
-                // Update the item
-                item["Title"] = updatedTitle; // Assuming "Title" is the field to update
-                item.Update();
-                context.ExecuteQuery();
-            }
+            logger.LogInformation("Performing operation...");
+            // Simulate some work
+            System.Threading.Thread.Sleep(1000); // Delay to mimic operation
+            logger.LogInformation("Operation completed successfully.");
         }
     }
 }
