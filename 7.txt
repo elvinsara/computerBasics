@@ -1,48 +1,57 @@
-Install-Package Serilog
-Install-Package Serilog.Sinks.File
-Install-Package Serilog.Extensions.Logging
+Install-Package log4net
+
+
+<?xml version="1.0" encoding="utf-8" ?>
+<log4net>
+  <appender name="FileAppender" type="log4net.Appender.FileAppender">
+    <file value="Logs/log.txt" />
+    <appendToFile value="true" />
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="[%-5level] [%date{yyyy-MM-dd HH:mm:ss}] %message%newline" />
+    </layout>
+  </appender>
+  
+  <root>
+    <level value="INFO" />
+    <appender-ref ref="FileAppender" />
+  </root>
+</log4net>
 
 
 using System;
-using Serilog;
+using log4net;
+using log4net.Config;
 
-namespace ConsoleLoggingExample
+namespace Log4netExample
 {
     class Program
     {
+        // Create a logger for this class
+        private static readonly ILog log = LogManager.GetLogger(typeof(Program));
+
         static void Main(string[] args)
         {
-            // Configure Serilog
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .WriteTo.File("Logs/log.txt", 
-                              rollingInterval: RollingInterval.Day,
-                              outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss}] {Message}{NewLine}")
-                .CreateLogger();
+            // Configure Log4net from the XML configuration file
+            XmlConfigurator.Configure();
 
             try
             {
-                // Log messages
-                Log.Information("Application started");
-                PerformOperation();
-                Log.Information("Application ended");
+                log.Info("Application started");
+
+                // Simulate a warning
+                log.Warn("Low disk space");
+
+                // Simulate an error
+                throw new InvalidOperationException("An error occurred during processing");
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "An error occurred while running the application");
+                log.Error(ex.Message, ex);
             }
             finally
             {
-                Log.CloseAndFlush();
+                log.Info("Application ended");
             }
-        }
-
-        static void PerformOperation()
-        {
-            Log.Information("Performing operation...");
-            // Simulate some work
-            System.Threading.Thread.Sleep(1000); // Delay to mimic operation
-            Log.Information("Operation completed successfully.");
         }
     }
 }
