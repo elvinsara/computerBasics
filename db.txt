@@ -1,68 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient; // For SQL Server connections
+Elena hurried through the rain-slick streets of Ambertown, the damp air laced with the rich scent of autumn leaves and far-off smoke. It was the kind of night that made the city feel alive, as if the streets had veins, and every raindrop was its heartbeat. The towering buildings loomed above her, their neon lights casting sharp angles of color on the wet pavement. Tonight, though, it wasn't just the hum of the city she heard—there was something else, a pulse beneath the usual rhythm, something she couldn’t quite place.
 
-namespace DatabaseExample
-{
-    class Program
-    {
-        // Class representing a User
-        public class User
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public string Email { get; set; }
-        }
+As she ducked under a glowing shop awning to catch her breath, Elena caught a glimpse of her reflection in the glass. Her hair was plastered to her forehead, her cheeks flushed from the cold, and her eyes—her eyes held that spark again, the one she thought she'd buried years ago. Just for a moment, the glass shimmered, like a ripple in water, and her reflection seemed to smile back with a knowing, almost conspiratorial expression.
 
-        static void Main(string[] args)
-        {
-            // Connection string to the database
-            string connectionString = "Data Source=.;Initial Catalog=SampleDB;Integrated Security=True";
+Then, just as suddenly, the glass stilled. The moment passed, but her heart beat faster. This wasn’t the first strange thing she’d noticed lately. Flickers of light in empty alleys, whispers without voices to carry them, a feeling of being watched—by someone, or something, hidden just out of sight. She had brushed it off as nerves or exhaustion, but now... now she wasn’t so sure.
 
-            // SQL query to retrieve data
-            string query = "SELECT Id, Name, Email FROM Users";
+Elena pulled her coat tighter, glancing down the narrow side street to her left. Shadows pooled thick and dark, broken only by the faintest glimmer of something glinting in the distance. She took a step forward, almost without thinking. Whatever was calling to her lay just ahead, around the next corner.
 
-            // List to store the retrieved users
-            List<User> users = new List<User>();
-
-            try
-            {
-                // Step 3: Establish a connection to the database
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-
-                    // Step 4: Execute the command
-                    using (SqlCommand command = new SqlCommand(query, connection))
-                    {
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            // Step 5: Read the data and bind it to the User list
-                            while (reader.Read())
-                            {
-                                User user = new User
-                                {
-                                    Id = reader.GetInt32(0),
-                                    Name = reader.GetString(1),
-                                    Email = reader.GetString(2)
-                                };
-                                users.Add(user);
-                            }
-                        }
-                    }
-                }
-
-                // Step 6: Display the data in a formatted manner
-                foreach (var user in users)
-                {
-                    Console.WriteLine($"ID: {user.Id}, Name: {user.Name}, Email: {user.Email}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: " + ex.Message);
-            }
-        }
-    }
-}
+And as she rounded the corner, she knew her life would never be the same.
